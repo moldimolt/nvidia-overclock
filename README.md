@@ -6,8 +6,7 @@ The usage syntax is `overclock.exe GPU_CLOCK VRAM_CLOCK` i.e. `overclock.exe 135
 # Known Bugs 
 1. Doubled Memory OC reading: When running overclock.exe with no arguments after overclocking, the memory OC reading will appear doubled, e.g. a memory OC of 250MHz (`overclock.exe 135 250`) will show `Current RAM OC: 500MHz`. Solely visual and doesn't effect functionality.
 1. Inaccurate GPU/memory clock reading: On GPUs past the 9xx series, overclock.exe reads garbage values for the current GPU/GPU memory clock. Solely visual and doesn't effect functionality.
-1. OC offset limits inaccurate for 2xxx series GPUs: 
-1. Memory OC clock input halved on some GPUs: On some GPUs, like my RTX 2080 MaxQ, inputting an OC of 250MHz for the memory will only result in a 125MHz memory OC. GPU clock OC is unaffected by this.
+1. Lacks GDDR6 memory support: Having not been updated since 2015, nvidia-overclock doesn't account for the existence of GDDR6 (i.e. 2xxx series GPUs) and using it on these GPUs causes buggy, potentially dangerous behavior.
 
 # License 
 ```
