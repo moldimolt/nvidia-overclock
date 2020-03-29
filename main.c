@@ -134,12 +134,18 @@ int main(int argc, char **argv)
         printf("\nGPU: %dMHz\n", (int)((clock_freq[i].domain[0].frequency) + ((pstates_info[i].pstates[0].clocks[0]).freqDelta_kHz.value))/1000);
         printf("VRAM: %dMHz\n", (int)((pstates_info[i].pstates[0].clocks[1]).data.single.freq_kHz)/get_memfreq_multiplier(memtype[i])/1000);
         printf("\nCurrent GPU OC: %dMHz\n", (int)((pstates_info[i].pstates[0].clocks[0]).freqDelta_kHz.value)/1000);
-        printf("Current RAM OC: %dMHz\n\n", (int)((pstates_info[i].pstates[0].clocks[1]).freqDelta_kHz.value)/get_memfreq_multiplier(memtype[i])/1000);
+        printf("Current VRAM OC: %dMHz\n\n", (int)((pstates_info[i].pstates[0].clocks[1]).freqDelta_kHz.value)/get_memfreq_multiplier(memtype[i])/1000);
     }
 
     if(argc > 2)
     {
         int cur_gpu = atoi(argv[1]);
+        if(cur_gpu >= nGPU)
+        {
+            printf("GPU%d not found!\nPlease specify a GPU within the range 0 to %d", cur_gpu, nGPU - 1);
+            return 0;
+        }
+        
         printf("Changing settings for GPU%d", cur_gpu);
 
         if(argc > 2)
@@ -178,7 +184,7 @@ int main(int argc, char **argv)
                 else
                 {
                     printf("\nGPU OC OK: %d MHz\n", gpufreq_mhz);
-                    if(argc > 3)
+                    if(argc > 3 && -250 <= vramfreq_mhz && vramfreq_mhz <= 250)
                         printf("VRAM OC OK: %d MHz\n", vramfreq_mhz);
                 }
             } else {
