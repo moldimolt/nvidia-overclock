@@ -88,9 +88,9 @@ typedef int (*NvAPI_GPU_GetFullName_t)(int *handle, char *sysname);
 typedef int (*NvAPI_GPU_GetPhysicalFrameBufferSize_t)(int *handle, int *memsize);
 typedef int (*NvAPI_GPU_GetRamType_t)(int *handle, int *memtype);
 typedef int (*NvAPI_GPU_GetVbiosVersionString_t)(int *handle, char *biosname);
-typedef int (*NvAPI_GPU_GetAllClockFrequencies_t)(int *handle, NV_GPU_CLOCK_FREQUENCIES_V2 *clock_info);
+typedef int (*NvAPI_GPU_GetAllClockFrequencies_t)(int *handle, NV_GPU_CLOCK_FREQUENCIES_V2 *pstates_info);
 typedef int (*NvAPI_GPU_GetPstates20_t)(int *handle, NV_GPU_PERF_PSTATES20_INFO_V1 *pstates_info);
-typedef int (*NvAPI_GPU_SetPstates20_t)(int *handle, int *pstates_info);
+typedef int (*NvAPI_GPU_SetPstates20_t)(int *handle, NV_GPU_PERF_PSTATES20_INFO_V1 *pstates_info);
 
 void *NvQueryInterface_trampoline(unsigned int offset);
 int NvInit_trampoline(void);
@@ -103,7 +103,7 @@ int NvGetMemType_trampoline(int *handle, int *memtype);
 int NvGetBiosName_trampoline(int *handle, char *biosname);
 int NvGetFreq_trampoline(int *handle, NV_GPU_CLOCK_FREQUENCIES_V2 *clock_info);
 int NvGetPstates_trampoline(int *handle, NV_GPU_PERF_PSTATES20_INFO_V1 *pstates_info);
-int NvSetPstates_trampoline(int *handle, int *pstates_info);
+int NvSetPstates_trampoline(int *handle, NV_GPU_PERF_PSTATES20_INFO_V1 *pstates_info);
 
 extern NvAPI_QueryInterface_t NvQueryInterface;
 extern NvAPI_Initialize_t NvInit;

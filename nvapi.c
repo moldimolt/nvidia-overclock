@@ -91,7 +91,7 @@ int NvGetPstates_trampoline(int *handle, NV_GPU_PERF_PSTATES20_INFO_V1 *pstates_
     return NvGetPstates(handle, pstates_info);
 }
 
-int NvSetPstates_trampoline(int *handle, int *pstates_info)
+int NvSetPstates_trampoline(int *handle, NV_GPU_PERF_PSTATES20_INFO_V1 *pstates_info)
 {
     NvSetPstates = NvQueryInterface(0x0F4DAE6B);
     return NvSetPstates(handle, pstates_info);

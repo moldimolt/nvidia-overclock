@@ -93,7 +93,7 @@ int main(int argc, char **argv)
     int *hdlGPU[64], *buf=0;
     char sysname[64];
     char *biosname[64];
-    NV_GPU_PERF_PSTATES20_INFO_V1 pstates_info[64];
+    NV_GPU_PERF_PSTATES20_INFO_V1 pstates_info[64], pstate_overclock;
     NV_GPU_CLOCK_FREQUENCIES_V2 clock_freq[64];
 
     memset(clock_freq, 0, sizeof(NV_GPU_CLOCK_FREQUENCIES_V2) * 64);
@@ -124,65 +124,67 @@ int main(int argc, char **argv)
     }
 
     printf("Name: %s\n", sysname);
-    printf("Detected %d GPUs\n", nGPU);
+    printf("Detected %d GPU(s)\n", nGPU);
     for(int i = 0; i < nGPU; i++)
     {
-        printf("Settings for GPU %d:\n\n", i);
+        printf("Settings for GPU %d\n", i);
         printf("VRAM: %dMB %s\n", memsize[i]/1024, get_memtype_string(memtype[i]));    
         printf("BIOS: %s\n", biosname[i]);
+        free(biosname[i]);
         printf("\nGPU: %dMHz\n", (int)((clock_freq[i].domain[0].frequency) + ((pstates_info[i].pstates[0].clocks[0]).freqDelta_kHz.value))/1000);
         printf("VRAM: %dMHz\n", (int)((pstates_info[i].pstates[0].clocks[1]).data.single.freq_kHz)/get_memfreq_multiplier(memtype[i])/1000);
         printf("\nCurrent GPU OC: %dMHz\n", (int)((pstates_info[i].pstates[0].clocks[0]).freqDelta_kHz.value)/1000);
-        printf("Current VRAM OC: %dMHz\n\n", (int)((pstates_info[i].pstates[0].clocks[1]).freqDelta_kHz.value)/get_memfreq_multiplier(memtype[i])/1000);
+        printf("Current RAM OC: %dMHz\n\n", (int)((pstates_info[i].pstates[0].clocks[1]).freqDelta_kHz.value)/get_memfreq_multiplier(memtype[i])/1000);
     }
 
-    if(argc > 1)
+    if(argc > 2)
     {
         int cur_gpu = atoi(argv[1]);
-        printf("changing settings for GPU %d", cur_gpu);
+        printf("Changing settings for GPU%d", cur_gpu);
 
         if(argc > 2)
         {
-            int userfreq = atoi(argv[2])*1000;
-            if(-250000 <= userfreq && userfreq <= 250000) {
-                buf = malloc(0x1c94);
-                memset(buf, 0, 0x1c94);
-                buf[0] = 0x11c94; 
-                buf[2] = 1; 
-                buf[3] = 1;
-                buf[10] = userfreq;
-                if(NvSetPstates(hdlGPU[cur_gpu], buf))
+            int gpufreq_mhz = atoi(argv[2]);
+            int vramfreq_mhz;
+            if(-250 <= gpufreq_mhz && gpufreq_mhz <= 250) {
+                memset(&pstate_overclock, 0, sizeof(NV_GPU_PERF_PSTATES20_INFO_V1));
+                pstate_overclock.version = 0x11c94; 
+                pstate_overclock.numPstates = 1;
+                pstate_overclock.numClocks = 1;
+                pstate_overclock.pstates[0].clocks[0].domainId = 0; // GPU core clock domain
+                pstate_overclock.pstates[0].clocks[0].freqDelta_kHz.value = gpufreq_mhz * 1000;
+                if(argc > 3)
+                {
+                    vramfreq_mhz = atoi(argv[3]);
+                    if(-250 <= vramfreq_mhz && vramfreq_mhz <= 250)
+                    {
+                        pstate_overclock.numClocks = 2;
+                        pstate_overclock.pstates[0].clocks[1].domainId = 4; // VRAM clock domain
+                        pstate_overclock.pstates[0].clocks[1].freqDelta_kHz.value = vramfreq_mhz * 1000 * get_memfreq_multiplier(memtype[cur_gpu]);
+                    }
+                    else
+                    {
+                        printf("\nVRAM frequency not in safe range (-250MHz to +250MHz).\n");
+                        printf("Continuing with GPU overclock...\n");
+                    }
+                }
+
+                if(NvSetPstates(hdlGPU[cur_gpu], &pstate_overclock))
+                {
                     printf("\nGPU OC failed!\n");
+                    if(argc > 3)
+                        printf("VRAM OC failed!\n");
+                }
                 else
-                    printf("\nGPU OC OK: %d MHz\n", userfreq/1000);
-                free(buf);
+                {
+                    printf("\nGPU OC OK: %d MHz\n", gpufreq_mhz);
+                    if(argc > 3)
+                        printf("VRAM OC OK: %d MHz\n", vramfreq_mhz);
+                }
             } else {
                 printf("\nGPU frequency not in safe range (-250MHz to +250MHz).\n");
                 return 1;
             }
-        }
-
-        if(argc > 3)
-        {
-            int userfreq = atoi(argv[3])*1000;
-            if(-250000 <= userfreq && userfreq <= 250000)
-            {
-                buf = malloc(0x1c94);
-                memset(buf, 0, 0x1c94);
-                buf[0] = 0x11c94;
-                buf[2] = 1;
-                buf[3] = 1;
-                buf[7] = 4;
-                buf[10] = userfreq*get_memfreq_multiplier(memtype[cur_gpu]);
-                if(NvSetPstates(hdlGPU[cur_gpu], buf))
-                    printf("VRAM OC failed!\n");
-                else
-                    printf("VRAM OC OK: %d MHz\n", userfreq/1000);
-                free(buf);
-            } else {
-                printf("\nVRAM frequency not in safe range (-250MHz to +250MHz).\n");
-                return 1;
-            }   
         }
     }
 
